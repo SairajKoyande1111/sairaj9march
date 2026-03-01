@@ -37,8 +37,8 @@ export default function CustomerDetailPage() {
   });
 
   const { data: customerInvoices = [], isLoading: invoicesLoading } = useQuery<Invoice[]>({
-    queryKey: ["/api/invoices"],
-    enabled: !!phone,
+    queryKey: ["/api/invoices", { phone: decodedPhone }],
+    enabled: !!decodedPhone,
   });
 
   const customerData = useMemo(() => {
