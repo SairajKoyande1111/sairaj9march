@@ -76,6 +76,9 @@ function InvoiceHeader({ business, invoiceNo, date }: { business: string; invoic
         <p className="text-xs font-bold text-red-600 uppercase tracking-widest">Invoice Details</p>
         <p className="text-2xl font-bold text-slate-900">#{invoiceNo}</p>
         <p className="text-slate-600">{format(new Date(date || new Date()), "dd MMM yyyy, hh:mm a")}</p>
+        {business === "Auto Gamma" && (
+          <p className="text-xs font-bold text-slate-700">GST: 27ACEFA1874A1ZS</p>
+        )}
       </div>
     </div>
   );
@@ -524,6 +527,7 @@ export default function InvoicePage() {
             <p style="font-size: 10px; font-weight: bold; color: #dc2626; text-transform: uppercase;">Invoice Details</p>
             <p style="font-size: 20px; font-weight: bold; color: #1e293b;">#${invoice.invoiceNo}</p>
             <p style="color: #64748b;">${format(new Date(invoice.date || new Date()), "dd MMM yyyy")}</p>
+            ${invoice.business === "Auto Gamma" ? `<p style="font-size: 10px; font-weight: bold; color: #334155;">GST: 27ACEFA1874A1ZS</p>` : ""}
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 24px; background: #f8fafc; padding: 16px; border-radius: 8px;">
