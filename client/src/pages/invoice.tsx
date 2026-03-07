@@ -502,9 +502,14 @@ export default function InvoicePage() {
   };
 
   const downloadExcel = (businessType: "Auto Gamma" | "AGNX") => {
+    console.log(`Starting Excel download for: ${businessType}`);
+    console.log("Total invoices available:", invoices.length);
+    
     const businessInvoices = invoices.filter(inv => inv.business === businessType);
+    console.log(`Found ${businessInvoices.length} invoices for ${businessType}`);
     
     if (businessInvoices.length === 0) {
+      console.warn(`No invoices found for ${businessType}. Filtered from:`, invoices.map(i => i.business));
       toast({
         title: "No data",
         description: `No invoices found for ${businessType}`,
@@ -522,56 +527,69 @@ export default function InvoicePage() {
         return details;
       }).join(", ");
 
+      const { status, paidAmount } = getPaymentStatus(inv);
+
       return {
-        "Invoice Number": inv.invoiceNo,
-        "Business Category": inv.business,
-        "Customer Name": inv.customerName,
-        "Mobile Number": inv.phoneNumber,
-        "Service Details": serviceDetails,
-        "Grand Total": inv.totalAmount
+        "Invoice Number": inv.invoiceNo || "N/A",
+        "Date": inv.date ? format(new Date(inv.date), "dd MMM yyyy") : "N/A",
+        "Business Category": inv.business || "N/A",
+        "Customer Name": inv.customerName || "N/A",
+        "Mobile Number": inv.phoneNumber || "N/A",
+        "Service Details": serviceDetails || "No items",
+        "Total Amount": inv.totalAmount || 0,
+        "Paid Amount": paidAmount || 0,
+        "Remaining Balance": (inv.totalAmount || 0) - (paidAmount || 0),
+        "Payment Status": status
       };
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-    
-    // Add some styling/metadata hints if possible (though limited in plain JSON to sheet)
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
-    
-    // Ensure the sheet has data
-    if (!worksheet['!ref']) {
+    console.log("Mapped Excel data sample:", excelData[0]);
+
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
+      
+      console.log("Workbook created, worksheet ref:", worksheet['!ref']);
+      
+      if (!worksheet['!ref']) {
+        throw new Error("Worksheet reference is empty - no data was written");
+      }
+
+      // Auto-size columns
+      const maxWidths = excelData.reduce((acc, row) => {
+        Object.keys(row).forEach((key, i) => {
+          const value = String(row[key as keyof typeof row] || "");
+          acc[i] = Math.max(acc[i] || 0, value.length, key.length);
+        });
+        return acc;
+      }, [] as number[]);
+      worksheet["!cols"] = maxWidths.map(w => ({ w: Math.min(w + 2, 50) }));
+
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${businessType.replace(/\s+/g, '_')}_Invoices_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log("Excel download triggered successfully");
+      toast({
+        title: "Success",
+        description: `Excel downloaded for ${businessType}`
+      });
+    } catch (error) {
+      console.error("Excel generation error:", error);
       toast({
         title: "Error",
-        description: "Failed to generate Excel data",
+        description: "Failed to generate Excel file. Check console for details.",
         variant: "destructive"
       });
-      return;
     }
-
-    // Auto-size columns
-    const maxWidths = excelData.reduce((acc, row) => {
-      Object.keys(row).forEach((key, i) => {
-        const value = String(row[key as keyof typeof row] || "");
-        acc[i] = Math.max(acc[i] || 0, value.length, key.length);
-      });
-      return acc;
-    }, [] as number[]);
-    worksheet["!cols"] = maxWidths.map(w => ({ w: Math.min(w + 2, 50) }));
-
-    // Use a more robust writing method for browser
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = window.URL.createObjectURL(data);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${businessType}_Invoices_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
-    link.click();
-    window.URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Success",
-      description: `Excel downloaded for ${businessType}`
-    });
   };
 
   const handleSendWhatsApp = async (invoice: Invoice) => {
