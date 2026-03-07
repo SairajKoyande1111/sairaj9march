@@ -533,20 +533,40 @@ export default function InvoicePage() {
     });
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
+    
+    // Add some styling/metadata hints if possible (though limited in plain JSON to sheet)
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
     
+    // Ensure the sheet has data
+    if (!worksheet['!ref']) {
+      toast({
+        title: "Error",
+        description: "Failed to generate Excel data",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Auto-size columns
     const maxWidths = excelData.reduce((acc, row) => {
       Object.keys(row).forEach((key, i) => {
-        const value = String(row[key as keyof typeof row]);
+        const value = String(row[key as keyof typeof row] || "");
         acc[i] = Math.max(acc[i] || 0, value.length, key.length);
       });
       return acc;
     }, [] as number[]);
-    worksheet["!cols"] = maxWidths.map(w => ({ w: w + 2 }));
+    worksheet["!cols"] = maxWidths.map(w => ({ w: Math.min(w + 2, 50) }));
 
-    XLSX.writeFile(workbook, `${businessType}_Invoices_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    // Use a more robust writing method for browser
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${businessType}_Invoices_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+    link.click();
+    window.URL.revokeObjectURL(url);
     
     toast({
       title: "Success",
