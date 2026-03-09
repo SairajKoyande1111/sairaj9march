@@ -1023,36 +1023,36 @@ export default function AddJobPage() {
                 </div>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
-                <FormField
-                  control={form.control}
-                  name="phoneNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-semibold text-slate-700">Phone Number * (10 digits)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter 10-digit mobile number" 
-                          {...field} 
-                          maxLength={10}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, "");
-                            field.onChange(value);
-                          }}
-                          className={`h-11 ${form.formState.errors.phoneNumber ? "border-red-500 ring-1 ring-red-500 bg-red-50" : ""}`} 
-                        />
-                      </FormControl>
-                      {isFetchingCustomer && (
-                        <p className="text-xs text-slate-500 mt-1">Fetching customer details...</p>
-                      )}
-                      {form.formState.errors.phoneNumber && (
-                        <p className="text-xs font-bold text-red-600 mt-1">
-                          {form.formState.errors.phoneNumber.message}
-                        </p>
-                      )}
-                    </FormItem>
-                  )}
-                />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold text-slate-700">Phone Number *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="10-digit number" 
+                            {...field} 
+                            maxLength={10}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, "");
+                              field.onChange(value);
+                            }}
+                            className={`h-11 ${form.formState.errors.phoneNumber ? "border-red-500 ring-1 ring-red-500 bg-red-50" : ""}`} 
+                          />
+                        </FormControl>
+                        {isFetchingCustomer && (
+                          <p className="text-xs text-slate-500 mt-1">Fetching...</p>
+                        )}
+                        {form.formState.errors.phoneNumber && (
+                          <p className="text-xs font-bold text-red-600 mt-1">
+                            {form.formState.errors.phoneNumber.message}
+                          </p>
+                        )}
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="customerName"
@@ -1079,20 +1079,20 @@ export default function AddJobPage() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="emailAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-semibold text-slate-700">Email Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="john@example.com" {...field} className="h-11" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="emailAddress"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-semibold text-slate-700">Email Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="john@example.com" {...field} className="h-11" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <FormField
                     control={form.control}
