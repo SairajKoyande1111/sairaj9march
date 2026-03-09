@@ -100,6 +100,7 @@ export default function AddJobPage() {
   });
 
   const [hasPrefilled, setHasPrefilled] = useState(false);
+  const [isFetchingCustomer, setIsFetchingCustomer] = useState(false);
 
   const form = useForm<JobCardFormValues>({
     resolver: zodResolver(jobCardSchema),
@@ -124,6 +125,36 @@ export default function AddJobPage() {
       serviceNotes: "",
     },
   });
+
+  // Watch phone number and fetch customer data when it reaches 10 digits
+  useEffect(() => {
+    const phoneNumber = form.watch("phoneNumber");
+    if (phoneNumber && phoneNumber.length === 10) {
+      setIsFetchingCustomer(true);
+      fetch(`/api/customers/by-phone/${phoneNumber}`)
+        .then(res => {
+          if (res.ok) {
+            return res.json();
+          }
+          throw new Error("Not found");
+        })
+        .then(customer => {
+          if (customer) {
+            form.setValue("customerName", customer.customerName || "");
+            form.setValue("emailAddress", customer.emailAddress || "");
+            form.setValue("make", customer.make || "");
+            form.setValue("model", customer.model || "");
+            form.setValue("year", customer.year || "");
+            form.setValue("licensePlate", customer.licensePlate || "");
+            form.setValue("vehicleType", customer.vehicleType || "");
+          }
+        })
+        .catch(() => {
+          // Customer not found - allow user to enter new data
+        })
+        .finally(() => setIsFetchingCustomer(false));
+    }
+  }, [form.watch("phoneNumber"), form]);
 
   useEffect(() => {
     if ((prefillPhone || prefillName) && !jobId && isJobCardsFetched && !hasPrefilled) {
@@ -992,6 +1023,35 @@ export default function AddJobPage() {
                 </div>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-semibold text-slate-700">Phone Number * (10 digits)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter 10-digit mobile number" 
+                          {...field} 
+                          maxLength={10}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, "");
+                            field.onChange(value);
+                          }}
+                          className={`h-11 ${form.formState.errors.phoneNumber ? "border-red-500 ring-1 ring-red-500 bg-red-50" : ""}`} 
+                        />
+                      </FormControl>
+                      {isFetchingCustomer && (
+                        <p className="text-xs text-slate-500 mt-1">Fetching customer details...</p>
+                      )}
+                      {form.formState.errors.phoneNumber && (
+                        <p className="text-xs font-bold text-red-600 mt-1">
+                          {form.formState.errors.phoneNumber.message}
+                        </p>
+                      )}
+                    </FormItem>
+                  )}
+                />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
@@ -1021,33 +1081,6 @@ export default function AddJobPage() {
                   />
                   <FormField
                     control={form.control}
-                    name="phoneNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-semibold text-slate-700">Phone Number *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="+1 555-0123" 
-                            {...field} 
-                            maxLength={10}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, "");
-                              field.onChange(value);
-                            }}
-                            className={`h-11 ${form.formState.errors.phoneNumber ? "border-red-500 ring-1 ring-red-500 bg-red-50" : ""}`} 
-                          />
-                        </FormControl>
-                        {form.formState.errors.phoneNumber && (
-                          <p className="text-xs font-bold text-red-600 mt-1">
-                            {form.formState.errors.phoneNumber.message}
-                          </p>
-                        )}
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                  <FormField
-                    control={form.control}
                     name="emailAddress"
                     render={({ field }) => (
                       <FormItem>
@@ -1059,6 +1092,7 @@ export default function AddJobPage() {
                       </FormItem>
                     )}
                   />
+                </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <FormField
                     control={form.control}

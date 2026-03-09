@@ -783,6 +783,18 @@ export class MongoStorage implements IStorage {
     }
   }
 
+  async getJobCardsByPhone(phone: string): Promise<JobCard | null> {
+    try {
+      const jobCard = await JobCardModel.findOne({ phoneNumber: phone })
+        .sort({ date: -1 })
+        .select('customerName phoneNumber emailAddress make model year licensePlate vehicleType');
+      return jobCard ? jobCard.toObject() : null;
+    } catch (error) {
+      console.error("Error fetching job card by phone:", error);
+      return null;
+    }
+  }
+
   async getOldCustomers(page: number, limit: number): Promise<{ customers: any[], total: number }> {
     const skip = (page - 1) * limit;
     const [customers, total] = await Promise.all([

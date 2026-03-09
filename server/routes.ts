@@ -137,6 +137,21 @@ app.use((req, res, next) => {
     }
   });
 
+  app.get("/api/customers/by-phone/:phone", async (req, res) => {
+    try {
+      const { phone } = req.params;
+      const customerData = await (storage as any).getJobCardsByPhone(phone);
+      if (customerData) {
+        res.json(customerData);
+      } else {
+        res.status(404).json({ message: "Customer not found" });
+      }
+    } catch (error: any) {
+      console.error("Error fetching customer by phone:", error);
+      res.status(500).json({ message: error.message || "Internal server error" });
+    }
+  });
+
   // Masters Routes
   app.get(api.masters.services.list.path, async (req, res) => {
     const services = await storage.getServices();
