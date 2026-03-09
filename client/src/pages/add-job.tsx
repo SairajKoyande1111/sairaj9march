@@ -129,14 +129,33 @@ export default function AddJobPage() {
     if ((prefillPhone || prefillName) && !jobId && isJobCardsFetched && !hasPrefilled) {
       const existingJob = jobCards.find(j => j.phoneNumber === prefillPhone);
       let previousVehicles: any[] = [];
+      
+      // Parse vehicles from URL parameter
       if (prefillVehiclesStr) {
         try {
-          previousVehicles = JSON.parse(prefillVehiclesStr);
+          const decoded = decodeURIComponent(prefillVehiclesStr);
+          previousVehicles = JSON.parse(decoded);
+          console.log("Parsed vehicles from URL:", previousVehicles);
         } catch (e) {
-          console.error("Failed to parse vehicles:", e);
+          console.error("Failed to parse vehicles from URL:", e, "Raw string:", prefillVehiclesStr);
         }
       }
-      const firstVehicle = previousVehicles && previousVehicles.length > 0 ? previousVehicles[0] : null;
+      
+      // Get the first vehicle or fallback to existing job's first vehicle
+      let firstVehicle: any = null;
+      if (previousVehicles && previousVehicles.length > 0) {
+        firstVehicle = previousVehicles[0];
+      } else if (existingJob) {
+        // Fallback: try to construct from existing job
+        firstVehicle = {
+          make: existingJob.make,
+          model: existingJob.model,
+          year: existingJob.year,
+          plate: existingJob.licensePlate,
+          type: existingJob.vehicleType
+        };
+      }
+      
       form.reset({
         customerName: prefillName || existingJob?.customerName || "",
         phoneNumber: prefillPhone || existingJob?.phoneNumber || "",

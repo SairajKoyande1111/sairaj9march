@@ -25,12 +25,13 @@ export default function CustomerDetailPage() {
   const { phone } = useParams<{ phone: string }>();
   const [, setLocation] = useLocation();
   
-  const createNewJobForCustomer = (customerPhone: string, customerName: string, customerEmail?: string, previousVehicles?: Array<{make: string; model: string; year?: string; plate: string}>) => {
-    const params = new URLSearchParams({
-      phone: customerPhone,
-      name: customerName,
-      ...(customerEmail && { email: customerEmail }),
-    });
+  const createNewJobForCustomer = (customerPhone: string, customerName: string, customerEmail?: string, previousVehicles?: any[]) => {
+    const params = new URLSearchParams();
+    params.set('phone', customerPhone);
+    params.set('name', customerName);
+    if (customerEmail) {
+      params.set('email', customerEmail);
+    }
     if (previousVehicles && previousVehicles.length > 0) {
       params.set('vehicles', JSON.stringify(previousVehicles));
     }
