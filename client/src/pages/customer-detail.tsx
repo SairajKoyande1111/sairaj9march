@@ -24,6 +24,18 @@ import { useMemo } from "react";
 export default function CustomerDetailPage() {
   const { phone } = useParams<{ phone: string }>();
   const [, setLocation] = useLocation();
+  
+  const createNewJobForCustomer = (customerPhone: string, customerName: string, customerEmail?: string, previousVehicles?: Array<{make: string; model: string; year?: string; plate: string}>) => {
+    const params = new URLSearchParams({
+      phone: customerPhone,
+      name: customerName,
+      ...(customerEmail && { email: customerEmail }),
+    });
+    if (previousVehicles && previousVehicles.length > 0) {
+      params.set('vehicles', JSON.stringify(previousVehicles));
+    }
+    setLocation(`/add-job?${params.toString()}`);
+  };
 
   const decodedPhone = useMemo(() => decodeURIComponent(phone || ""), [phone]);
 
@@ -256,6 +268,21 @@ export default function CustomerDetailPage() {
                     </TabsList>
                   </div>
                   <TabsContent value="history" className="p-4 space-y-4 m-0">
+                    <div className="mb-4">
+                      <Button 
+                        onClick={() => createNewJobForCustomer(
+                          customerData.phone,
+                          customerData.name,
+                          customerData.email,
+                          customerData.vehicles
+                        )}
+                        className="flex items-center gap-2"
+                        data-testid="button-new-job-from-customer"
+                      >
+                        <Plus className="h-4 w-4" />
+                        + New Job
+                      </Button>
+                    </div>
                     {customerData.history.map((job) => (
                       <div key={job.id} className="p-4 border rounded-lg hover:bg-slate-50 transition-colors">
                         <div className="flex justify-between items-start mb-2">

@@ -18,6 +18,7 @@ export default function AccessoryCategoryDetail() {
   const [newAccessoryName, setNewAccessoryName] = useState("");
   const [newAccessoryQuantity, setNewAccessoryQuantity] = useState("");
   const [newAccessoryPrice, setNewAccessoryPrice] = useState("");
+  const [categorySearchQuery, setCategorySearchQuery] = useState("");
   
   const [selectedCategory, setSelectedCategory] = useState<AccessoryCategory | null>(null);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
@@ -128,7 +129,16 @@ export default function AccessoryCategoryDetail() {
                 </Button>
               </div>
               <div className="space-y-2">
-                {categories.map((cat) => (
+                <Input 
+                  placeholder="Search categories..." 
+                  value={categorySearchQuery}
+                  onChange={(e) => setCategorySearchQuery(e.target.value)}
+                  className="mb-3"
+                  data-testid="input-search-categories"
+                />
+                {categories
+                  .filter(c => c.name.toLowerCase().includes(categorySearchQuery.toLowerCase()))
+                  .map((cat) => (
                   <div 
                     key={cat.id} 
                     className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors ${

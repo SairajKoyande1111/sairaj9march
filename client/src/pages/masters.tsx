@@ -46,6 +46,7 @@ export default function MastersPage() {
   const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false);
   const [newVehicleTypeName, setNewVehicleTypeName] = useState("");
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [accessorySearchQuery, setAccessorySearchQuery] = useState("");
 
   const { data: services = [] } = useQuery<ServiceMaster[]>({
     queryKey: [api.masters.services.list.path],
@@ -68,7 +69,8 @@ export default function MastersPage() {
   });
 
   const categoryNames = accessoryCategories.map(c => c.name);
-  const filteredAccessories = accessories.filter(a => categoryNames.includes(a.category));
+  const filteredAccessories = accessories.filter(a => categoryNames.includes(a.category) && 
+    a.name.toLowerCase().includes(accessorySearchQuery.toLowerCase()));
 
   const deleteServiceMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/masters/services/${id}`),
@@ -362,21 +364,31 @@ export default function MastersPage() {
           </TabsContent>
 
           <TabsContent value="accessories" className="space-y-6">
-            <div className="flex justify-end gap-3">
-              <Link href="/masters/accessory-category/manage">
-                <Button variant="outline" className="flex items-center gap-2">
-                  <LayoutGrid className="h-4 w-4" />
-                  Manage Categories
-                </Button>
-              </Link>
-
-              <Dialog open={isAddAccessoryOpen} onOpenChange={setIsAddAccessoryOpen}>
-                <DialogTrigger asChild>
-                  <Button className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Accessory
+            <div className="flex flex-col md:flex-row gap-3 md:items-center">
+              <div className="flex-1">
+                <Input 
+                  placeholder="Search accessories by name..." 
+                  value={accessorySearchQuery}
+                  onChange={(e) => setAccessorySearchQuery(e.target.value)}
+                  className="h-11"
+                  data-testid="input-search-accessories"
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <Link href="/masters/accessory-category/manage">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <LayoutGrid className="h-4 w-4" />
+                    Manage Categories
                   </Button>
-                </DialogTrigger>
+                </Link>
+
+                <Dialog open={isAddAccessoryOpen} onOpenChange={setIsAddAccessoryOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Accessory
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Add New Accessory</DialogTitle>
@@ -387,7 +399,8 @@ export default function MastersPage() {
                     onAddCategory={(name) => createCategoryMutation.mutate(name)}
                   />
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

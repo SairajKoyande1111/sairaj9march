@@ -55,7 +55,7 @@ import {
     model: z.string().min(1, "Vehicle model is required").transform(val => 
       val.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')
     ),
-    year: z.string().min(1, "Vehicle year is required").regex(/^\d{4}$/, "Year must be a 4-digit number"),
+    year: z.string().optional().or(z.literal("")).refine(val => !val || /^\d{4}$/.test(val), "Year must be a 4-digit number"),
     licensePlate: z.string().min(1, "License plate is required").refine(val => {
       const standard = /^[A-Z]{2}\s\d{2}\s[A-Z]{2}\s\d{4}$/;
       const bharat = /^\d{2}\sBH\s\d{4}\s[A-Z]{2}$/;
@@ -91,6 +91,9 @@ export default function AddJobPage() {
   const searchParams = new URLSearchParams(useSearch());
   const jobId = searchParams.get("id");
   const prefillPhone = searchParams.get("phone");
+  const prefillName = searchParams.get("name");
+  const prefillEmail = searchParams.get("email");
+  const prefillVehiclesStr = searchParams.get("vehicles");
 
   const { data: jobCards = [], isFetched: isJobCardsFetched } = useQuery<JobCard[]>({
     queryKey: ["/api/job-cards"],
@@ -122,39 +125,41 @@ export default function AddJobPage() {
     },
   });
 
-  // Prefill customer information if phone is provided in URL
   useEffect(() => {
-    if (prefillPhone && !jobId && isJobCardsFetched && !hasPrefilled) {
+    if ((prefillPhone || prefillName) && !jobId && isJobCardsFetched && !hasPrefilled) {
       const existingJob = jobCards.find(j => j.phoneNumber === prefillPhone);
-      if (existingJob) {
-        form.reset({
-          customerName: existingJob.customerName,
-          phoneNumber: existingJob.phoneNumber,
-          emailAddress: existingJob.emailAddress || "",
-          referralSource: existingJob.referralSource,
-          referrerName: existingJob.referrerName || "",
-          referrerPhone: existingJob.referrerPhone || "",
-          make: "",
-          model: "",
-          year: "",
-          licensePlate: "",
-          vehicleType: "",
-          services: [],
-          ppfs: [],
-          accessories: [],
-          laborCharge: 0,
-          discount: 0,
-          gst: 18,
-          serviceNotes: "",
-        });
-        setHasPrefilled(true);
-      } else {
-        // If no job card exists, we might want to still prefill the phone number
-        form.setValue("phoneNumber", prefillPhone);
-        setHasPrefilled(true);
+      let previousVehicles: any[] = [];
+      if (prefillVehiclesStr) {
+        try {
+          previousVehicles = JSON.parse(prefillVehiclesStr);
+        } catch (e) {
+          console.error("Failed to parse vehicles:", e);
+        }
       }
+      const firstVehicle = previousVehicles && previousVehicles.length > 0 ? previousVehicles[0] : null;
+      form.reset({
+        customerName: prefillName || existingJob?.customerName || "",
+        phoneNumber: prefillPhone || existingJob?.phoneNumber || "",
+        emailAddress: prefillEmail || existingJob?.emailAddress || "",
+        referralSource: existingJob?.referralSource || "",
+        referrerName: existingJob?.referrerName || "",
+        referrerPhone: existingJob?.referrerPhone || "",
+        make: firstVehicle?.make || "",
+        model: firstVehicle?.model || "",
+        year: firstVehicle?.year || "",
+        licensePlate: firstVehicle?.plate || "",
+        vehicleType: firstVehicle?.type || "",
+        services: [],
+        ppfs: [],
+        accessories: [],
+        laborCharge: 0,
+        discount: 0,
+        gst: 18,
+        serviceNotes: "",
+      });
+      setHasPrefilled(true);
     }
-  }, [prefillPhone, jobId, jobCards, isJobCardsFetched, hasPrefilled, form]);
+  }, [prefillPhone, prefillName, prefillEmail, prefillVehiclesStr, jobId, jobCards, isJobCardsFetched, hasPrefilled, form]);
 
   const { data: jobToEdit, isLoading: isLoadingJob, refetch: refetchJob } = useQuery<JobCard>({
     queryKey: ["/api/job-cards", jobId],
@@ -1198,10 +1203,10 @@ export default function AddJobPage() {
                     name="year"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold text-slate-700">Year *</FormLabel>
+                        <FormLabel className="text-sm font-semibold text-slate-700">Year (Optional)</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="2024" 
+                            placeholder="2024 or leave blank for NA" 
                             {...field}
                             inputMode="numeric"
                             maxLength={4}
