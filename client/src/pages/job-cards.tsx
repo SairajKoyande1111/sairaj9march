@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { JobCard } from "@shared/schema";
-import { Search, Plus, Calendar, User, Car, Settings, IndianRupee } from "lucide-react";
+import { Search, Plus, Calendar, User, Car, Settings, IndianRupee, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -14,21 +14,41 @@ export default function JobCardsPage() {
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Jobs");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const { data: jobCards = [], isLoading } = useQuery<JobCard[]>({
     queryKey: ["/api/job-cards"],
   });
 
-  const filteredJobs = jobCards.filter(job => {
-    const matchesSearch = 
-      job.jobNo.toLowerCase().includes(search.toLowerCase()) ||
-      job.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      job.licensePlate.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesStatus = statusFilter === "All Jobs" || job.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  const filteredJobs = jobCards
+    .filter(job => {
+      const matchesSearch = 
+        job.jobNo.toLowerCase().includes(search.toLowerCase()) ||
+        job.customerName.toLowerCase().includes(search.toLowerCase()) ||
+        job.licensePlate.toLowerCase().includes(search.toLowerCase());
+      
+      const matchesStatus = statusFilter === "All Jobs" || job.status === statusFilter;
+      
+      // Date filter
+      let matchesDate = true;
+      if (startDate || endDate) {
+        const jobDate = new Date(job.date);
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          matchesDate = matchesDate && jobDate >= start;
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          matchesDate = matchesDate && jobDate <= end;
+        }
+      }
+      
+      return matchesSearch && matchesStatus && matchesDate;
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const statusCounts = {
     "All Jobs": jobCards.length,
@@ -60,6 +80,41 @@ export default function JobCardsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+          </div>
+          <div className="flex gap-2 flex-1">
+            <div className="relative flex-1">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="date"
+                placeholder="From Date"
+                className="pl-10 h-11"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="relative flex-1">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="date"
+                placeholder="To Date"
+                className="pl-10 h-11"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+            {(startDate || endDate) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                }}
+                className="h-11"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
 

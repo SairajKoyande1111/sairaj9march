@@ -90,11 +90,9 @@ function InvoiceItemDetails({ item }: { item: InvoiceItem }) {
   
   // Extract main name and details from parentheses if they exist
   let displayName = item.name;
-  let detailText = "";
   const match = item.name.match(/^(.*?)\s*\((.*?)\)([\s\S]*)$/);
   if (match) {
     displayName = match[1];
-    detailText = match[2];
   }
 
   // Check for multi-line content (Quantity info added in add-job.tsx)
@@ -107,7 +105,6 @@ function InvoiceItemDetails({ item }: { item: InvoiceItem }) {
     const headerMatch = headerLine.match(/^(.*?)\s*\((.*?)\)$/);
     if (headerMatch) {
       displayName = headerMatch[1];
-      detailText = headerMatch[2];
     } else {
       displayName = headerLine;
     }
@@ -121,11 +118,6 @@ function InvoiceItemDetails({ item }: { item: InvoiceItem }) {
         {quantityLines.map((line, i) => (
           <div key={i} className="text-slate-600 font-medium">{line.replace(/^[\s,]+/, '')}</div>
         ))}
-        
-        {/* Detail text from parentheses (e.g. Vehicle Type - Warranty) */}
-        {detailText && (
-          <div className="text-slate-600 font-medium">Warranty:-{detailText.split(' - ').pop()}</div>
-        )}
 
         {isPPF && (
           <>
