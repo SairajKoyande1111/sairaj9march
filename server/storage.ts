@@ -144,12 +144,12 @@ const jobCardMongoSchema = new mongoose.Schema({
   customerName: { type: String, required: true },
   phoneNumber: { type: String, required: true },
   emailAddress: { type: String },
-  referralSource: { type: String, required: true },
+  referralSource: { type: String },
   referrerName: { type: String },
   referrerPhone: { type: String },
   make: { type: String, required: true },
   model: { type: String, required: true },
-  year: { type: String, required: true },
+  year: { type: String },
   licensePlate: { type: String, required: true },
   vin: { type: String },
   services: [{ id: String, name: String, price: Number, technician: String, business: { type: String, default: "Auto Gamma" } }],
@@ -943,10 +943,10 @@ export class MongoStorage implements IStorage {
           customerName: j.customerName,
           phoneNumber: j.phoneNumber,
           emailAddress: j.emailAddress,
-          vehicleInfo: `${j.year} ${j.make} ${j.model}`,
+          vehicleInfo: `${j.year || "NA"} ${j.make} ${j.model}`,
           vehicleMake: j.make,
           vehicleModel: j.model,
-          vehicleYear: j.year,
+          vehicleYear: j.year || "NA",
           licensePlate: j.licensePlate,
           vehicleType: (j as any).vehicleType,
           items: bizItems,
@@ -1339,10 +1339,10 @@ export class MongoStorage implements IStorage {
             customerName: j.customerName,
             phoneNumber: j.phoneNumber,
             emailAddress: j.emailAddress,
-            vehicleInfo: `${j.year} ${j.make} ${j.model}`,
+            vehicleInfo: `${j.year || "NA"} ${j.make} ${j.model}`,
             vehicleMake: j.make,
             vehicleModel: j.model,
-            vehicleYear: j.year,
+            vehicleYear: j.year || "NA",
             licensePlate: j.licensePlate,
             vehicleType: (j as any).vehicleType,
             items: bizItems,
@@ -1421,10 +1421,10 @@ export class MongoStorage implements IStorage {
             customerName: j.customerName,
             phoneNumber: j.phoneNumber,
             emailAddress: j.emailAddress,
-            vehicleInfo: `${j.year} ${j.make} ${j.model}`,
+            vehicleInfo: `${j.year || "NA"} ${j.make} ${j.model}`,
             vehicleMake: j.make,
             vehicleModel: j.model,
-            vehicleYear: j.year,
+            vehicleYear: j.year || "NA",
             licensePlate: j.licensePlate,
             vehicleType: (j as any).vehicleType,
             items: bizItems,
@@ -1624,7 +1624,7 @@ export class MongoStorage implements IStorage {
           if (jobCard) {
             enrichedInvoice.vehicleMake = enrichedInvoice.vehicleMake || jobCard.make;
             enrichedInvoice.vehicleModel = enrichedInvoice.vehicleModel || jobCard.model;
-            enrichedInvoice.vehicleYear = enrichedInvoice.vehicleYear || jobCard.year;
+            enrichedInvoice.vehicleYear = enrichedInvoice.vehicleYear || jobCard.year || "NA";
             enrichedInvoice.licensePlate = enrichedInvoice.licensePlate || jobCard.licensePlate;
             enrichedInvoice.vehicleType = enrichedInvoice.vehicleType || jobCard.vehicleType;
             
@@ -1703,7 +1703,7 @@ export class MongoStorage implements IStorage {
           if (jobCard) {
             enrichedInvoice.vehicleMake = enrichedInvoice.vehicleMake || jobCard.make;
             enrichedInvoice.vehicleModel = enrichedInvoice.vehicleModel || jobCard.model;
-            enrichedInvoice.vehicleYear = enrichedInvoice.vehicleYear || jobCard.year;
+            enrichedInvoice.vehicleYear = enrichedInvoice.vehicleYear || jobCard.year || "NA";
             enrichedInvoice.licensePlate = enrichedInvoice.licensePlate || jobCard.licensePlate;
             enrichedInvoice.vehicleType = enrichedInvoice.vehicleType || jobCard.vehicleType;
             
