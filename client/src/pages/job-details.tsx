@@ -282,7 +282,7 @@ export default function JobDetailsPage() {
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Year</p>
-                    <p className="text-base font-semibold text-slate-800">{job.year}</p>
+                    <p className="text-base font-semibold text-slate-800">{job.year || "NA"}</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">License Plate</p>
